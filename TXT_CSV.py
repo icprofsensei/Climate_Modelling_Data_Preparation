@@ -2,6 +2,7 @@ import os
 import shutil
 import json
 import csv
+import tkinter as tk
 
 
 WEATHER_DIR = "C:/Users/Dhyla/Documents/Startup_Success/climastock/ECA_blend_tx"
