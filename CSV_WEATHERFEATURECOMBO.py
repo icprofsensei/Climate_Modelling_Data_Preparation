@@ -4,11 +4,72 @@ import matplotlib.pyplot as plt
 import datetime
 from sklearn.linear_model import LinearRegression
 import numpy as np
+import tkinter as tk
+from tkinter import filedialog, messagebox
+from tqdm import tqdm
 
 
-OVERALL_DIR =  "C:/Users/Dhyla/Documents/Startup_Success/climastock2"
-VARS = ['max_temp','min_temp', 'max_wind', 'mean_temp', 'mean_wind', 'rain']
+# TKINTER GUI
 
+class LocatorApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title('File Selector')
+        self.root.geometry("800x300")
+        self.weather_dir = ""
+        self.output_dir = ""
+        self.create_widgets()
+
+    def select_weather_file(self):
+        self.weather_dir = filedialog.askopenfilename(title = "Select the file containing the csv weather file to investigate: ")
+        if self.weather_dir:
+            self.inputloc.delete(0, tk.END)
+            self.inputloc.insert(0, self.weather_dir)
+    
+    def select_output_dir(self):
+        self.output_dir = filedialog.askdirectory(title = "Select the folder where any output files will be created: ")
+        if self.output_dir:
+            self.outputloc.delete(0, tk.END)
+            self.outputloc.insert(0, self.output_dir)
+    
+    def submit(self):
+        if not self.weather_dir or not self.output_dir:
+            messagebox.showwarning("Input Error: Complete all fields")
+        else:
+            try:
+                self.root.destroy()
+            except Exception as e:
+                messagebox.showerror(f"Error {e} occurred")
+    
+    
+    def create_widgets(self):
+        inputlab = tk.Label(self.root, text= "Weather csv file:")
+        inputlab.pack(pady=5)
+        self.inputloc = tk.Entry(self.root, width = 50)
+        self.inputloc.pack(pady=5)
+        inputbutton = tk.Button(self.root, text = "Browse", command = self.select_weather_file)
+        inputbutton.pack(pady=5)
+
+        outputlab = tk.Label(self.root, text= "Output directory")
+        outputlab.pack(pady=5)
+        self.outputloc = tk.Entry(self.root, width = 50)
+        self.outputloc.pack(pady=5)
+        outputbutton = tk.Button(self.root, text = "Browse", command = self.select_output_dir)
+        outputbutton.pack(pady=5)
+
+        submit_button = tk.Button(self.root, text = "Submit", command = self.submit)
+        submit_button.pack(pady=5)
+
+
+#  LAUNCH GUI
+
+root = tk.Tk()
+app = LocatorApp(root)
+root.mainloop()
+WEATHER_DIR = app.weather_dir
+OUTPUT_DIR = app.output_dir
+
+print(WEATHER_DIR, OUTPUT_DIR)
 
 def LOCMAKER(parent, child):
     return (parent + "/" + child)
@@ -224,6 +285,8 @@ def processorfunc(file):
     augmented = dataaug(clean)
     coefs = fluctuations(augmented)
     extremeweather(augmented,file)
+
+
 # Find locations with complete data across all variables.
 netdict = {}
 for v in VARS:
@@ -244,15 +307,4 @@ print(completes)
 
 VARDICT = {'max_temp':'TX', 'min_temp': 'TX', 'max_wind':'FX', 'mean_temp':'TX', 'mean_wind':'FG', 'rain':'RR'}
 
-
-#print(completes)
-
-#processorfunc(completes[2])
-#52_DE_MUENCHEN_.csv
-#2759_DE_BERLINTEMPELHOF_.csv
-#193_NO_OSLOBLINDERN_.csv
-#3946_ES_MADRIDAEROPUERTO_.csv
-#2969_ES_BARCELONAAEROPUERTO_.csv
-#121_IE_DUBLINPHOENIXPARK_.csv
-#446_LV_RIGA_.csv
 processorfunc('52_DE_MUENCHEN_.csv')

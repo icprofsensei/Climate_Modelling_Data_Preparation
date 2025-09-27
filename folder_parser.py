@@ -5,7 +5,7 @@ import pandas as pd
 import csv
 import tkinter as tk
 from tkinter import filedialog, messagebox
-
+from tqdm import tqdm
 
 # CHECK ONLY ALPHABETICAL CHARACTERS
 def onlyalpha(s):
@@ -117,7 +117,7 @@ print(targetdfSOU)
 
 #ITERATE
 
-for f in filenames:
+for f in tqdm(filenames):
     parts = f.split('_')
     if len(parts)>1:
         prefix = parts[0]
@@ -127,7 +127,7 @@ for f in filenames:
     noprefix = f.split('_')[1].lstrip(f"{middle}")
     nosuffix = str(noprefix.rstrip('.txt'))
     val = nosuffix.lstrip('0')
-    print(val)
+    #print(val)
     if val.isdigit():
         row = targetdfSTA.loc[targetdfSTA['STAID'] == str(int(val))]
         if row.empty:
@@ -140,12 +140,12 @@ for f in filenames:
             cn = str(row['CN'].iloc[0]) 
             staid = str(row['STAID'].iloc[0])
         title = f"{staid}_{cn}_{station}_.csv"
-        print(title)
+        #print(title)
         listening = 'off'
         data = [['STAID','SOUID','DATE',prefix,f"Q_{prefix}"]]
         file = f"{WEATHER_DIR}/{f}"
         newaddress = f"{OUTPUT_DIR}/data-{prefix}/{title}"
-        print(file, newaddress)
+        #print(file, newaddress)
         with open(file, encoding = 'latin-1') as g:
             for line in g:
                 if line.startswith('STAID,'):
