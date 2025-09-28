@@ -178,6 +178,30 @@ def plot_raw(df, path, feature, prefix):
     plt.savefig(f"{path}/raw.png")
     plt.close()
 
+
+# LINEAR FORECAST
+
+def plot_and_update(df, datedict, path, feature):
+    df['MD'] = df['TRUEDATE'].apply(lambda x: x.strftime('%m-%d'))
+    newls = []
+    for index, row in df.iterrows():
+        slope = datedict[row['MD']]['slope']
+        intercept = datedict[row['MD']]['intercept']
+        row['EXP'] = (slope * row['DATE']) + intercept
+        newls.append(row)
+    df = pd.DataFrame(newls)
+    outliers = df['Z_SCORE'] > 3
+    outlier_indices = df[outliers].index
+    df = df.drop(outlier_indices)
+    df = df.sort_values('TRUEDATE')
+    exp = sns.lineplot(df, x = 'TRUEDATE', y = 'EXP', color = "#eede74")
+    exp.set_xlabel('Date')
+    exp.set_ylabel(feature)
+    exp.set_title(f"Line Chart for {feature} across all years using linear model forecasts")
+    plt.savefig(f"{path}/expected.png")
+    plt.close()
+    return df
+
 #  LAUNCH GUI
 
 root = tk.Tk()
@@ -194,3 +218,5 @@ plot_coef_dist(datedict, result_dir, feature)
 plot_10_avg(df, result_dir, feature)
 plot_30_avg(df, result_dir, feature)
 plot_raw(df, result_dir, feature, prefix)
+df = plot_and_update(df, datedict, result_dir, feature)
+df.to_csv(f"{result_dir}/final.csv")
