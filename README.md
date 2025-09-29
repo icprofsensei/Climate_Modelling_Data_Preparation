@@ -43,3 +43,17 @@ Visit the link here: https://www.ecad.eu/dailydata/predefinedseries.php
 
 11) This will create a results folder displaying (a) Raw line chart (b) 10 day moving average line chart (c) 30 day moving average line chart (d) Linear model coefficients density diagram for each day of the year (e) Linear model line chart for each day of the year (f) Cleaned csv files for further processing.
 
+
+**Please note the following advice for referencing ECAD datasets for research papers or publications of your own:**
+a) For **ECA&D**:
+“We acknowledge the data providers in the ECA&D project.
+Klein Tank, A.M.G. and Coauthors, 2002. Daily dataset of 20th-century surface air
+temperature and precipitation series for the European Climate Assessment. Int. J. of Climatol.,
+22, 1441-1453.
+Data and metadata available at https://www.ecad.eu”
+b) For **E-OBS**:
+“We acknowledge the E-OBS dataset and the data providers in the ECA&D project
+(https://www.ecad.eu).
+Cornes, R., G. van der Schrier, E.J.M. van den Besselaar, and P.D. Jones. 2018: An Ensemble
+Version of the E-OBS Temperature and Precipitation Datasets, J. Geophys. Res. Atmos., 123.
+doi:10.1029/2017JD028200"
