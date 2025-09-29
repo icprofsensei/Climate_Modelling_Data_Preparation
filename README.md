@@ -1,6 +1,8 @@
 # Climate Modelling Data Preparation
 <img width="652" height="93" alt="image" src="https://github.com/user-attachments/assets/bc9d535c-0ff2-4ede-962e-772eeb9ae526" />
 
+
+Please note that the following instructions and scripts were produced externally to ECAD, this is unofficial software designed for improving the ease of use for researchers using ECAD datasets.
 File processor and data preparation for machine-learning model-building on European Climate data from ECAD. 
 
 Pre-requisites: Python or Conda is installed on your machine. The following tutorial is for windows devices.
