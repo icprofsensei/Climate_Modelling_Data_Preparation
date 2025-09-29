@@ -45,12 +45,16 @@ Visit the link here: https://www.ecad.eu/dailydata/predefinedseries.php
 
 
 **Please note the following advice for referencing ECAD datasets for research papers or publications of your own:**
+
+
 a) For **ECA&D**:
 “We acknowledge the data providers in the ECA&D project.
 Klein Tank, A.M.G. and Coauthors, 2002. Daily dataset of 20th-century surface air
 temperature and precipitation series for the European Climate Assessment. Int. J. of Climatol.,
 22, 1441-1453.
 Data and metadata available at https://www.ecad.eu”
+
+
 b) For **E-OBS**:
 “We acknowledge the E-OBS dataset and the data providers in the ECA&D project
 (https://www.ecad.eu).
