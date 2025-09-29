@@ -24,7 +24,11 @@ Visit the link here: https://www.ecad.eu/dailydata/predefinedseries.php
 7) Extract the climate files from your zip folder to another repository. I would recommend the following directory structure:
 >[YOUR PROJECT DIRECTORY]
 >>env
+
+
 >>data (Extract zip folder here)
+
+
 >>All files in my repository: csv_processor.py, folder_parser.py ...
 
 8) In the command prompt, launch the file processor and follow the instructions to open the folder of unzipped climate files and the desired destination where your results folder should be created (I recommend 'data' as above):
