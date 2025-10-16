@@ -25,6 +25,7 @@ class LocatorApp:
         self.root.geometry("800x300")
         self.weather_dir = ""
         self.output_dir = ""
+        self.feature = ""
         self.create_widgets()
 
     def select_weather_zip(self):
@@ -40,9 +41,10 @@ class LocatorApp:
             self.outputloc.insert(0, self.output_dir)
     
     def submit(self):
-        if not self.weather_dir or not self.output_dir:
+        if not self.weather_dir or not self.output_dir or not self.feature:
             messagebox.showwarning("Input Error: Complete all fields")
         else:
+            self.feature = self.feature.get("1.0", tk.END).strip()
             try:
                 self.root.destroy()
             except Exception as e:
@@ -64,6 +66,12 @@ class LocatorApp:
         outputbutton = tk.Button(self.root, text = "Browse", command = self.select_output_dir)
         outputbutton.pack(pady=5)
 
+        featurelab = tk.Label(self.root, text= "Feature: ")
+        featurelab.pack(pady=5)
+        self.feature = tk.Text(self.root, width = 50, height = 1)
+        self.feature.pack(pady = 5)
+
+
         submit_button = tk.Button(self.root, text = "Submit", command = self.submit)
         submit_button.pack(pady=5)
 
@@ -75,10 +83,29 @@ app = LocatorApp(root)
 root.mainloop()
 WEATHER_DIR = app.weather_dir
 OUTPUT_DIR = app.output_dir
+feature = app.feature
 filenames = [f for f in os.listdir(WEATHER_DIR) if f.endswith(('.txt'))]
 regfiles = [f for f in filenames if f.rstrip('.txt') not in ['date_timestamp', 'elements', 'sources', 'stations']]
 prefix = regfiles[0].split('_')[0]
-os.makedirs(f"{OUTPUT_DIR}/data-{prefix}", exist_ok = True)
+os.makedirs(f"{OUTPUT_DIR}/data-{prefix}-{feature}", exist_ok = True)
+
+#ELEMENTS
+target = f"{WEATHER_DIR}/elements.txt"
+listening = 'off'
+dataELE = [['ELEID', 'DESC']]
+with open(target, encoding = 'latin-1') as f:
+    for line in f:
+        if line.startswith('ELEID,'):
+            listening = 'on'
+        elif listening == 'on':
+            linels = line.split(',', 1)
+            linels = [l.strip() for l in linels]
+            dataELE.append(linels)
+        else:
+            continue
+headers = dataELE.pop(0)
+targetdfELE = pd.DataFrame(dataELE, columns=headers)
+targetdfELE.to_csv(f"{OUTPUT_DIR}/data-{prefix}-{feature}/elements.csv")
 
 #STATIONS
 target = f"{WEATHER_DIR}/stations.txt"
@@ -96,11 +123,12 @@ with open(target, encoding = 'latin-1') as f:
             continue
 headers = dataSTA.pop(0)
 targetdfSTA = pd.DataFrame(dataSTA, columns=headers)
+targetdfSTA.to_csv(f"{OUTPUT_DIR}/data-{prefix}-{feature}/stations.csv")
 
 #SOURCES
 target = f"{WEATHER_DIR}/sources.txt"
 listening = 'off'
-dataSOU = [['','STAID', 'SOUID','SOUNAME','CN','LAT', 'LON', 'HGHT','ELEI','START','STOP','PARID','PARNAME']]
+dataSOU = [['STAID', 'SOUID','SOUNAME','CN','LAT', 'LON', 'HGHT','ELEI','START','STOP','PARID','PARNAME']]
 with open(target, encoding = 'latin-1') as f:
     for line in f:
         if line.startswith('STAID,'):
@@ -108,12 +136,23 @@ with open(target, encoding = 'latin-1') as f:
         elif listening == 'on':
             linels = line.split(',')
             linels = [l.strip() for l in linels if l!= None]
-            dataSOU.append(linels)
+            if len(linels) != 12 and len(linels) >1:
+                        sublist = linels[0:1]
+                        sublist.append((linels[2]+'-'+ linels[3]))
+                        sublist2 = linels[4:]
+                        overall = sublist + sublist2
+                        if type(overall[2]) == str and type(overall[6]) == int:
+                            dataSOU.append(overall)
+                        else:
+                            continue
+            else:
+                linels = [l.strip() for l in linels if l!= None]
+                dataSOU.append(linels)
         else:
             continue
 headers = dataSOU.pop(0)
 targetdfSOU = pd.DataFrame(dataSOU, columns=headers)
-print(targetdfSOU)
+targetdfSOU.to_csv(f"{OUTPUT_DIR}/data-{prefix}-{feature}/sources.csv")
 
 #ITERATE
 
@@ -139,13 +178,11 @@ for f in tqdm(filenames):
             station = onlyalpha(row['STANAME'].iloc[0])
             cn = str(row['CN'].iloc[0]) 
             staid = str(row['STAID'].iloc[0])
-        title = f"{staid}_{cn}_{station}_.csv"
-        #print(title)
+        title = f"{prefix}_{staid}_{cn}_{station}_.csv"
         listening = 'off'
         data = [['STAID','SOUID','DATE',prefix,f"Q_{prefix}"]]
         file = f"{WEATHER_DIR}/{f}"
-        newaddress = f"{OUTPUT_DIR}/data-{prefix}/{title}"
-        #print(file, newaddress)
+        newaddress = f"{OUTPUT_DIR}/data-{prefix}-{feature}/{title}"
         with open(file, encoding = 'latin-1') as g:
             for line in g:
                 if line.startswith('STAID,'):

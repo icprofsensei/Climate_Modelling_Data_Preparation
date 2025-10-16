@@ -212,7 +212,7 @@ OUTPUT_DIR = app.output_dir
 feature = app.feature
 df, prefix, file = pipeline(WEATHER_DIR)
 datedict = dateextraction(df,  prefix)
-result_dir = f"{OUTPUT_DIR}/RESULT-{file}"
+result_dir = f"{OUTPUT_DIR}/RESULT-{file}-{feature}"
 os.makedirs(result_dir, exist_ok = True)
 plot_coef_dist(datedict, result_dir, feature)
 plot_10_avg(df, result_dir, feature)
