@@ -28,7 +28,7 @@ class LocatorApp:
         self.create_widgets()
 
     def select_weather_folder(self):
-        self.weather_dir = filedialog.askdirectory(title = "Select the folder containing the csv weather file to preprocess: ")
+        self.weather_dir = filedialog.askdirectory(title = "Select the folder containing the parquet weather file to preprocess: ")
         if self.weather_dir:
             self.inputloc.delete(0, tk.END)
             self.inputloc.insert(0, self.weather_dir)
@@ -40,7 +40,6 @@ class LocatorApp:
             self.outputloc.insert(0, self.output_dir)
     
     def submit(self):
-        
         if not self.weather_dir or not self.output_dir:
             messagebox.showwarning("Input Error: Complete all fields")
         else:
@@ -52,21 +51,21 @@ class LocatorApp:
     
     def create_widgets(self):
         inputlab = tk.Label(self.root, text= "Weather csv file:")
-        inputlab.pack(pady=5)
+        inputlab.grid(row=0, column = 1)
         self.inputloc = tk.Entry(self.root, width = 50)
-        self.inputloc.pack(pady=5)
+        self.inputloc.grid(row=1, column = 1)
         inputbutton = tk.Button(self.root, text = "Browse", command = self.select_weather_folder)
-        inputbutton.pack(pady=5)
+        inputbutton.grid(row=2, column = 1)
 
         outputlab = tk.Label(self.root, text= "Output directory")
-        outputlab.pack(pady=5)
+        outputlab.grid(row=3, column = 1)
         self.outputloc = tk.Entry(self.root, width = 50)
-        self.outputloc.pack(pady=5)
+        self.outputloc.grid(row=4, column = 1)
         outputbutton = tk.Button(self.root, text = "Browse", command = self.select_output_dir)
-        outputbutton.pack(pady=5)
+        outputbutton.grid(row=5, column = 1)
 
         submit_button = tk.Button(self.root, text = "Submit", command = self.submit)
-        submit_button.pack(pady=5)
+        submit_button.grid(row=6, column = 1)
 
 def latlon_polars(col_series):
     # Cast the entire series to string at the beginning
@@ -104,7 +103,7 @@ schema = {
 }
 print("Making Database")
 con = ddb.connect(database=duckdb_path, read_only=False) 
-df_sources = pl.scan_csv(f"{WEATHER_DIR}/sources.csv", schema_overrides = schema)
+df_sources = pl.scan_parquet(f"{WEATHER_DIR}/sources.parquet", schema_overrides = schema)
 sources = (df_sources.select(['STAID', 'SOUID', 'SOUNAME', 'CN', 'LAT', 'LON', 'HGHT', 'ELEI', 'START', 'STOP'])
            .with_columns([
                             pl.col("START").str.strptime(pl.Date, "%Y%m%d"),
@@ -130,7 +129,7 @@ con.execute(f"""
             SELECT * FROM sources;
 """)
 print("Loaded Sources")
-df_stations = pl.scan_csv(f"{WEATHER_DIR}/stations.csv")
+df_stations = pl.scan_parquet(f"{WEATHER_DIR}/stations.parquet")
 stations = (df_stations.select(['STAID',  'STANAME', 'CN', 'LAT', 'LON', 'HGHT'])
             .with_columns([latlon_polars(pl.col('LAT')).alias('LAT'),
                             latlon_polars(pl.col('LON')).alias('LON')
@@ -149,7 +148,7 @@ con.execute(f"""
             SELECT * FROM stations;
 """)
 print("Loaded Stations")
-df_elements = pl.scan_csv(f"{WEATHER_DIR}/elements.csv")
+df_elements = pl.scan_parquet(f"{WEATHER_DIR}/elements.parquet")
 elements = (df_elements.select(['ELEID', 'DESC'])
             .rename({
                     "ELEID": "ELEID",
@@ -166,7 +165,7 @@ con.execute(f"""
 """)
 print("Loaded Elements")
 print("Reading feature files...")
-df_overall = pl.scan_csv(f"{WEATHER_DIR}/{feature}_*.csv")
+df_overall = pl.scan_parquet(f"{WEATHER_DIR}/*_{feature}.csv")
 result = (df_overall
           .filter(pl.col(feature) != -9999.0)
           .with_columns([
@@ -187,5 +186,3 @@ con.execute(f"""
     """)
 print("Finished")
 FIELDS(duckdb_path, feature_name).show()
-fieldselect = input("Which feature would you like to generate a training dataset on?")
-PROCESS(duckdb_path, feature, feature_name, fieldselect).consistent()
