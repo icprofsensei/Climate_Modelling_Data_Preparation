@@ -101,13 +101,18 @@ duckdb_path = app.db
 var = app.selection
 feature_dict = {
     'DailyMaximumTemperature': 'TX',
-    'DailyMinimumTemperature': 'TX',
-    'DailyMeanTemperature': 'TX',
-    'DailyHumidity': 'HU',
-    'DailyMeanWindSpeed': 'FG',
-    'DailyMaximumWindGust': 'FX',
-    'DailyWindDirection': 'DD'
-
+    'DailyMinimumTemperature': 'TN',
+    'DailyMeanTemperature': 'TG',
+    "DailyPrecipitationAmount":'RR',
+    "DailyMeanSeaLevelPressure":'PP',
+    "DailyCloudCover":'CC',
+    "DailyHumidity":'HU',
+    "DailySnowDepth":'SD',
+    "DailySunshineDuration":'SS',
+    "GlobalRadiation":'QQ',
+    "DailyMeanWindSpeed":'FG',
+    "DailyMaximumWindGust":'FX',
+    "DailyWindDirection":'DD'
 }  
 
 PROCESS(app.db, var, feature_dict[var], varnum).consistent()
