@@ -21,7 +21,7 @@ class LocatorApp:
     def __init__(self, root):
         self.root = root
         self.root.title('File Selector')
-        self.root.geometry("400x300")
+        self.root.geometry("300x180")
         self.weather_dir = ""
         self.output_dir = ""
         self.create_widgets()
@@ -50,21 +50,21 @@ class LocatorApp:
     
     def create_widgets(self):
         inputlab = tk.Label(self.root, text= "Weather parquet file:")
-        inputlab.grid(row=0, column = 1)
+        inputlab.grid(row=0, column = 2)
         self.inputloc = tk.Entry(self.root, width = 50)
-        self.inputloc.grid(row=1, column = 1)
+        self.inputloc.grid(row=1, column = 2)
         inputbutton = tk.Button(self.root, text = "Browse", command = self.select_weather_folder)
-        inputbutton.grid(row=2, column = 1)
+        inputbutton.grid(row=2, column = 2)
 
-        outputlab = tk.Label(self.root, text= "Output db directory")
-        outputlab.grid(row=3, column = 1)
+        outputlab = tk.Label(self.root, text= "Location of output database:")
+        outputlab.grid(row=3, column = 2)
         self.outputloc = tk.Entry(self.root, width = 50)
-        self.outputloc.grid(row=4, column = 1)
+        self.outputloc.grid(row=4, column = 2)
         outputbutton = tk.Button(self.root, text = "Browse", command = self.select_output_dir)
-        outputbutton.grid(row=5, column = 1)
+        outputbutton.grid(row=5, column = 2)
 
         submit_button = tk.Button(self.root, text = "Submit", command = self.submit)
-        submit_button.grid(row=6, column = 1)
+        submit_button.grid(row=6, column = 2)
 
 def latlon_polars(col_series):
     # Cast the entire series to string at the beginning
@@ -181,5 +181,4 @@ for r in tqdm(remaining):
             """)
         os.remove(f"{WEATHER_DIR}/{r}")
 print("Finished")
-os.remove(WEATHER_DIR)
 FIELDS(duckdb_path, feature_name).show()
