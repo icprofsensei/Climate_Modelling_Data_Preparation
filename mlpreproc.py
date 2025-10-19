@@ -14,7 +14,6 @@ import duckdb as ddb
 from sqlalchemy import Column, Integer, Sequence, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.session import Session
-from processor import PROCESS
 from summarise import FIELDS
 # ------- TKINTER GUI ---------
 
@@ -22,7 +21,7 @@ class LocatorApp:
     def __init__(self, root):
         self.root = root
         self.root.title('File Selector')
-        self.root.geometry("800x300")
+        self.root.geometry("400x300")
         self.weather_dir = ""
         self.output_dir = ""
         self.create_widgets()
@@ -50,14 +49,14 @@ class LocatorApp:
     
     
     def create_widgets(self):
-        inputlab = tk.Label(self.root, text= "Weather csv file:")
+        inputlab = tk.Label(self.root, text= "Weather parquet file:")
         inputlab.grid(row=0, column = 1)
         self.inputloc = tk.Entry(self.root, width = 50)
         self.inputloc.grid(row=1, column = 1)
         inputbutton = tk.Button(self.root, text = "Browse", command = self.select_weather_folder)
         inputbutton.grid(row=2, column = 1)
 
-        outputlab = tk.Label(self.root, text= "Output directory")
+        outputlab = tk.Label(self.root, text= "Output db directory")
         outputlab.grid(row=3, column = 1)
         self.outputloc = tk.Entry(self.root, width = 50)
         self.outputloc.grid(row=4, column = 1)
@@ -89,21 +88,10 @@ featurels = WEATHER_DIR.split('/')
 items = len(featurels)
 feature = featurels[items -1].split('-')[1]
 feature_name = featurels[items-1].split('-')[2]
-schema = {
-    'STAID': pl.Int64,
-    'SOUID': pl.Int64, 
-    'SOUNAME': pl.Utf8,
-    'CN': pl.Utf8,
-    'LAT': pl.Utf8,  
-    'LON': pl.Utf8, 
-    'HGHT': pl.Float64,
-    'ELEI': pl.Utf8,
-    'START': pl.Utf8, 
-    'STOP': pl.Utf8
-}
+
 print("Making Database")
 con = ddb.connect(database=duckdb_path, read_only=False) 
-df_sources = pl.scan_parquet(f"{WEATHER_DIR}/sources.parquet", schema_overrides = schema)
+df_sources = pl.scan_parquet(f"{WEATHER_DIR}/sources.parquet")
 sources = (df_sources.select(['STAID', 'SOUID', 'SOUNAME', 'CN', 'LAT', 'LON', 'HGHT', 'ELEI', 'START', 'STOP'])
            .with_columns([
                             pl.col("START").str.strptime(pl.Date, "%Y%m%d"),
@@ -129,6 +117,7 @@ con.execute(f"""
             SELECT * FROM sources;
 """)
 print("Loaded Sources")
+os.remove(f"{WEATHER_DIR}/sources.parquet")
 df_stations = pl.scan_parquet(f"{WEATHER_DIR}/stations.parquet")
 stations = (df_stations.select(['STAID',  'STANAME', 'CN', 'LAT', 'LON', 'HGHT'])
             .with_columns([latlon_polars(pl.col('LAT')).alias('LAT'),
@@ -147,6 +136,7 @@ con.execute(f"""
             INSERT INTO {feature_name}_stations
             SELECT * FROM stations;
 """)
+os.remove(f"{WEATHER_DIR}/stations.parquet")
 print("Loaded Stations")
 df_elements = pl.scan_parquet(f"{WEATHER_DIR}/elements.parquet")
 elements = (df_elements.select(['ELEID', 'DESC'])
@@ -163,26 +153,33 @@ con.execute(f"""
             INSERT INTO {feature_name}_elements
             SELECT * FROM elements;
 """)
+os.remove(f"{WEATHER_DIR}/elements.parquet")
 print("Loaded Elements")
 print("Reading feature files...")
-df_overall = pl.scan_parquet(f"{WEATHER_DIR}/*_{feature}.csv")
-result = (df_overall
-          .filter(pl.col(feature) != -9999.0)
-          .with_columns([
-                            pl.col("DATE").cast(pl.Utf8).str.strptime(pl.Date, "%Y%m%d")
-                        ])
-          .collect())
+dirlist = os.listdir(f"{WEATHER_DIR}")
+remaining = [d for d in dirlist if d not in ['elements.parquet', 'stations.parquet', 'sources.parquet']]
+for r in tqdm(remaining):
+        df_overall = pl.scan_parquet(f"{WEATHER_DIR}/{r}")
+        result = (df_overall
+                
+                .with_columns([
+                                    pl.col(feature).cast(pl.Float64),
+                                    pl.col("DATE").cast(pl.Utf8).str.strptime(pl.Date, "%Y%m%d")
+                                ])
+                .filter(pl.col(feature) != -9999.0)
+                .collect())
 
-con.execute(f"""
-        CREATE TABLE IF NOT EXISTS {feature_name} (
-        PK_{feature} INTEGER,
-        STAID INTEGER,
-        SOUID INTEGER, 
-        DATE DATE, 
-        HU INTEGER,
-        Q_HU INTEGER) ;
-        INSERT INTO {feature_name}
-        SELECT * FROM result;
-    """)
+        con.execute(f"""
+                CREATE TABLE IF NOT EXISTS {feature_name} (
+                STAID INTEGER,
+                SOUID INTEGER, 
+                DATE DATE, 
+                HU INTEGER,
+                Q_HU INTEGER) ;
+                INSERT INTO {feature_name}
+                SELECT * FROM result;
+            """)
+        os.remove(f"{WEATHER_DIR}/{r}")
 print("Finished")
+os.remove(WEATHER_DIR)
 FIELDS(duckdb_path, feature_name).show()
